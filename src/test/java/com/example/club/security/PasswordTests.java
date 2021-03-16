@@ -11,6 +11,7 @@ public class PasswordTests {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    // 패스워드 인코더로 나오는 값 확인 (매번 다르지만 matches()는 true)
     @Test
     public void testEncode(){
 
