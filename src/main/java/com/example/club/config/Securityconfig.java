@@ -28,6 +28,8 @@ public class Securityconfig extends WebSecurityConfigurerAdapter {
         http.formLogin();   //인증인가 문제시 로그인 화면으로
         http.csrf().disable();  //csrf토큰 발행 안하기 : 외부에서 REST로 이용하는 보안 설정 다루기 위해
         http.logout();
+        http.oauth2Login(); // 구글 로그인
+
     }
 
 
