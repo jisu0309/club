@@ -1,5 +1,6 @@
 package com.example.club.config;
 
+import com.example.club.security.handler.ClubLoginSuccessHandler;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,11 +26,19 @@ public class Securityconfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests()
                 .antMatchers("/sample/all").permitAll()
                 .antMatchers("/sample/member").hasRole("USER");
+
         http.formLogin();   //인증인가 문제시 로그인 화면으로
         http.csrf().disable();  //csrf토큰 발행 안하기 : 외부에서 REST로 이용하는 보안 설정 다루기 위해
-        http.logout();
-        http.oauth2Login(); // 구글 로그인
+//        http.logout();
 
+        http.oauth2Login().successHandler(successHandler()); // 구글 로그인
+
+    }
+
+    // 로그인 성공 이후 처리
+    @Bean
+    public ClubLoginSuccessHandler successHandler(){
+        return new ClubLoginSuccessHandler(passwordEncoder());
     }
 
 
