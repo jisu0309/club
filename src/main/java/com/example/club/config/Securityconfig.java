@@ -1,10 +1,13 @@
 package com.example.club.config;
 
 import com.example.club.security.handler.ClubLoginSuccessHandler;
+import com.example.club.security.service.ClubUserDetailsService;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -12,7 +15,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 @Log4j2
+@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class Securityconfig extends WebSecurityConfigurerAdapter {
+
+    @Autowired
+    private ClubUserDetailsService userDetailsService;
 
     // 패스워드 암호화
     @Bean
@@ -23,15 +30,17 @@ public class Securityconfig extends WebSecurityConfigurerAdapter {
     // 특정 리소스(URL)에 접근제한
     @Override
     protected void configure(HttpSecurity http) throws Exception{
-        http.authorizeRequests()
-                .antMatchers("/sample/all").permitAll()
-                .antMatchers("/sample/member").hasRole("USER");
+//        http.authorizeRequests()
+//                .antMatchers("/sample/all").permitAll()
+//                .antMatchers("/sample/member").hasRole("USER");
 
         http.formLogin();   //인증인가 문제시 로그인 화면으로
         http.csrf().disable();  //csrf토큰 발행 안하기 : 외부에서 REST로 이용하는 보안 설정 다루기 위해
-//        http.logout();
+        http.logout();
 
         http.oauth2Login().successHandler(successHandler()); // 구글 로그인
+
+        http.rememberMe().tokenValiditySeconds(60*60*7).userDetailsService(userDetailsService); // Remember me (7Days)
 
     }
 
