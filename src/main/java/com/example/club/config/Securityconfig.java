@@ -1,5 +1,8 @@
 package com.example.club.config;
 
+import com.example.club.security.filter.ApiCheckFilter;
+import com.example.club.security.filter.ApiLoginFilter;
+import com.example.club.security.handler.ApiLoginFailHandler;
 import com.example.club.security.handler.ClubLoginSuccessHandler;
 import com.example.club.security.service.ClubUserDetailsService;
 import lombok.extern.log4j.Log4j2;
@@ -12,6 +15,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @Log4j2
@@ -42,6 +46,10 @@ public class Securityconfig extends WebSecurityConfigurerAdapter {
 
         http.rememberMe().tokenValiditySeconds(60*60*7).userDetailsService(userDetailsService); // Remember me (7Days)
 
+        //filterChain 사이에 내가 만든 filter 순서 지정해서 넣어주기
+        http.addFilterBefore(apiCheckFilter(), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(apiLoginFilter(), UsernamePasswordAuthenticationFilter.class);
+
     }
 
     // 로그인 성공 이후 처리
@@ -60,4 +68,21 @@ public class Securityconfig extends WebSecurityConfigurerAdapter {
 //                .roles("USER");
 //    }
 
+        @Bean
+    public ApiLoginFilter apiLoginFilter() throws Exception{
+
+        ApiLoginFilter apiLoginFilter = new ApiLoginFilter("/api/login");   //동작할 경로 지정
+        apiLoginFilter.setAuthenticationManager(authenticationManager());   //AuthenticationManager
+
+        apiLoginFilter.setAuthenticationFailureHandler(new ApiLoginFailHandler());  // 인증실패시 처리 핸들러
+
+        return apiLoginFilter;
+    }
+
+
+    // OncePerRequestFilter
+    @Bean
+    public ApiCheckFilter apiCheckFilter(){
+        return new ApiCheckFilter("/notes/**/*");   // "/notes/.."로 시작하는 경우에만 동작하게 패턴 사용
+    }
 }
