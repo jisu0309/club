@@ -5,6 +5,7 @@ import com.example.club.security.filter.ApiLoginFilter;
 import com.example.club.security.handler.ApiLoginFailHandler;
 import com.example.club.security.handler.ClubLoginSuccessHandler;
 import com.example.club.security.service.ClubUserDetailsService;
+import com.example.club.security.util.JWTUtil;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -68,10 +69,10 @@ public class Securityconfig extends WebSecurityConfigurerAdapter {
 //                .roles("USER");
 //    }
 
-        @Bean
+    @Bean
     public ApiLoginFilter apiLoginFilter() throws Exception{
 
-        ApiLoginFilter apiLoginFilter = new ApiLoginFilter("/api/login");   //동작할 경로 지정
+        ApiLoginFilter apiLoginFilter = new ApiLoginFilter("/api/login", jwtUtil());   //동작할 경로 지정
         apiLoginFilter.setAuthenticationManager(authenticationManager());   //AuthenticationManager
 
         apiLoginFilter.setAuthenticationFailureHandler(new ApiLoginFailHandler());  // 인증실패시 처리 핸들러
@@ -79,10 +80,15 @@ public class Securityconfig extends WebSecurityConfigurerAdapter {
         return apiLoginFilter;
     }
 
+    @Bean
+    public JWTUtil jwtUtil(){
+        return new JWTUtil();
+    }
+
 
     // OncePerRequestFilter
     @Bean
     public ApiCheckFilter apiCheckFilter(){
-        return new ApiCheckFilter("/notes/**/*");   // "/notes/.."로 시작하는 경우에만 동작하게 패턴 사용
+        return new ApiCheckFilter("/notes/**/*", jwtUtil());   // "/notes/.."로 시작하는 경우에만 동작하게 패턴 사용
     }
 }

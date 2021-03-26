@@ -1,5 +1,6 @@
 package com.example.club.security.filter;
 
+import com.example.club.security.util.JWTUtil;
 import lombok.extern.log4j.Log4j2;
 import net.minidev.json.JSONObject;
 import org.springframework.util.AntPathMatcher;
@@ -18,11 +19,13 @@ public class ApiCheckFilter extends OncePerRequestFilter {
 
     private AntPathMatcher antPathMatcher;
     private String pattern;
+    private JWTUtil jwtUtil;
 
     // "/notes/.."로 시작하는 경우에만 동작하게 패턴 사용
-    public ApiCheckFilter(String pattern){
+    public ApiCheckFilter(String pattern, JWTUtil jwtUtil){
         this.antPathMatcher = new AntPathMatcher();
         this.pattern = pattern;
+        this.jwtUtil = jwtUtil;
     }
 
     @Override
@@ -62,17 +65,29 @@ public class ApiCheckFilter extends OncePerRequestFilter {
     }
 
 
+    // 내부에서 Authorization 헤더 추출해서 검증
     private boolean checkAuthHeader (HttpServletRequest request){
 
         boolean checkResult = false;
 
         String authHeader = request.getHeader("Authorization");
 
-        if(StringUtils.hasText(authHeader)){
+        if(StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")){    // JWT 사용시 인증타입 'Bearer' (일반적으로는 Basic)
             log.info("Authorization exist: "+authHeader);
 
-            if(authHeader.equals("12345678")){
-                checkResult = true;
+//            if(authHeader.equals("12345678")){
+//                checkResult = true;
+//            }
+
+            // jwt 토큰으로 email 확인
+            try{
+                String email = jwtUtil.validateAndExtract(authHeader.substring(7));
+                log.info("validate result: "+email);
+
+                checkResult = email.length() > 0;
+
+            } catch (Exception e){
+               e.printStackTrace();
             }
         }
 

@@ -1,5 +1,7 @@
 package com.example.club.security.filter;
 
+import com.example.club.security.dto.ClubAuthMemberDTO;
+import com.example.club.security.util.JWTUtil;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -16,8 +18,13 @@ import java.io.IOException;
 @Log4j2
 public class ApiLoginFilter extends AbstractAuthenticationProcessingFilter {
 
-    public ApiLoginFilter(String defaultFilterProcessesUrl){
+    private JWTUtil jwtUtil;
+
+    // 생성자로 JWTUtil 주입
+    public ApiLoginFilter(String defaultFilterProcessesUrl, JWTUtil jwtUtil){
+
         super(defaultFilterProcessesUrl);
+        this.jwtUtil = jwtUtil;
     }
 
     @Override
@@ -49,6 +56,21 @@ public class ApiLoginFilter extends AbstractAuthenticationProcessingFilter {
         log.info("successfulAuthentication: "+authResult);  //authResult : 인증 성공한 사용자 정보
 
         log.info(authResult.getPrincipal());
+
+        // email address
+        String email = ((ClubAuthMemberDTO)authResult.getPrincipal()).getUsername();
+        String token = null;
+
+        try{
+            token = jwtUtil.generateToken(email);
+
+            response.setContentType("text/plain");
+            response.getOutputStream().write(token.getBytes());
+
+            log.info(token);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
 
     }
 
